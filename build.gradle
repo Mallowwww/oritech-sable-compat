@@ -27,6 +27,77 @@ sourceSets.main.resources {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name = "Architectury"
+        url = "https://maven.architectury.dev/"
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "GeckoLib"
+                url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/"
+            }
+        }
+        filter {
+            includeGroup "software.bernie.geckolib"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven { url = "https://maven.ryanhcode.dev/releases" }
+        }
+        filter {
+            includeGroup("dev.ryanhcode.sable-companion")
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "ModMaven"
+                url = "https://modmaven.dev/"
+            }
+        }
+        filter {
+            includeGroup "dev.technici4n"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "TeamResourceful"
+                url = "https://maven.teamresourceful.com/repository/maven-public/"
+            }
+        }
+        filter {
+            includeGroup "earth.terrarium.athena"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "CurseMaven"
+                url = "https://www.cursemaven.com"
+            }
+        }
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 base {
@@ -104,6 +175,15 @@ dependencies {
     // For all intends and purposes: You can treat this dependency as if it is a normal library you would use.
     implementation "net.neoforged:neoforge:${neo_version}"
 
+
+    implementation "rearth.oritech:oritech-neoforge-1.21.1:1.2.6"
+    implementation "maven.modrinth:sable:1.2.2+mc1.21.1"
+
+    jarJar(api("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:[${project.sable_companion_version},)")) {
+        version {
+            prefer(project.sable_companion_version)
+        }
+    }
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

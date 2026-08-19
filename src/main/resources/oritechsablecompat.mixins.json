@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.mallowwww.oritechsablecompat.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "oritechsablecompat.mixins.refmap.json",
+  "mixins": [
+    "EndericLaserBlockEntityMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -32,7 +32,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 @Mod(com.mallowwww.oritechsablecompat.OritechSableCompatMod.MODID)
 public class OritechSableCompatMod {
-    public static final String MODID = "examplemod";
+    public static final String MODID = "oritechsablecompat";
     public static final Logger LOGGER = LogUtils.getLogger();
     public OritechSableCompatMod(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
