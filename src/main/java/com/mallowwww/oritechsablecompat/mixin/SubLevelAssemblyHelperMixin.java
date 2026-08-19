@@ -13,7 +13,9 @@ import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3dc;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,10 +25,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import rearth.oritech.api.energy.containers.SimpleEnergyStorage;
+import rearth.oritech.block.base.block.MultiblockMachine;
+import rearth.oritech.block.blocks.accelerator.AcceleratorControllerBlock;
+import rearth.oritech.block.blocks.generators.BigSolarPanelBlock;
+import rearth.oritech.block.blocks.interaction.MachineFrameBlock;
 import rearth.oritech.block.blocks.pipes.AbstractPipeBlock;
 import rearth.oritech.block.blocks.pipes.GenericPipeBlock;
+import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.MachineCoreEntity;
+import rearth.oritech.block.entity.accelerator.AcceleratorControllerBlockEntity;
 import rearth.oritech.block.entity.pipes.GenericPipeInterfaceEntity;
+import rearth.oritech.util.MultiblockMachineController;
 
 import java.util.Collection;
 
@@ -49,7 +58,6 @@ public abstract class SubLevelAssemblyHelperMixin {
     private static void assembleBlocks(ServerLevel level, BlockPos anchor, Iterable<BlockPos> blocks, BoundingBox3ic bounds, CallbackInfoReturnable<SubLevel> ci) {
         ci.cancel();
         ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
-        System.out.println("Test 1");
         assert container != null;
 
         SubLevel containingSubLevel = Sable.HELPER.getContaining(level, anchor);
@@ -60,7 +68,6 @@ public abstract class SubLevelAssemblyHelperMixin {
             containingPose.transformPosition(pose.position());
             pose.orientation().set(containingPose.orientation());
         }
-        System.out.println("Test 2");
 
         ServerSubLevel subLevel = (ServerSubLevel)container.allocateNewSubLevel(pose);
         LevelPlot plot = subLevel.getPlot();
@@ -76,7 +83,6 @@ public abstract class SubLevelAssemblyHelperMixin {
         } else {
             subLevel.logicalPose().rotationPoint().set((double)plotAnchor.getX() + (double)0.5F, (double)plotAnchor.getY() + (double)0.5F, (double)plotAnchor.getZ() + (double)0.5F);
         }
-        System.out.println("Test 3");
 
         subLevel.logicalPose().position().set(subLevelCenter.x, subLevelCenter.y, subLevelCenter.z);
         SubLevelPhysicsSystem physicsSystem = container.physicsSystem();
@@ -84,25 +90,52 @@ public abstract class SubLevelAssemblyHelperMixin {
         if (containingSubLevel != null) {
             kickFromContainingSubLevel(level, physicsSystem, pipeline, subLevel, containingSubLevel);
         }
-        System.out.println("Test 4");
 
         pipeline.teleport(subLevel, subLevel.logicalPose().position(), subLevel.logicalPose().orientation());
         subLevel.updateLastPose();
         moveTrackingPoints(level, bounds, subLevel, transform);
         ci.setReturnValue(subLevel);
-        System.out.println("Test 5");
 
         // My code starts here
         blocks.forEach(pos -> {
-            System.out.println("Test 6");
             var state = level.getBlockState(transform.apply(pos));
             System.out.println(state);
-            if (!(state.getBlock() instanceof AbstractPipeBlock pipeBlock)) return;
-            System.out.println("WE WERE NOTHIN");
-            var isInterface = pipeBlock.hasNeighboringMachine(state, level, transform.apply(pos), false);
-            GenericPipeInterfaceEntity.addNode(level, transform.apply(pos), isInterface, state, pipeBlock.getNetworkData(level));
-            level.setBlockAndUpdate(transform.apply(pos), state);
-            pipeBlock.getNetworkData(level).setDirty();
+            if (state.getBlock() instanceof AbstractPipeBlock pipeBlock) {
+                var isInterface = pipeBlock.hasNeighboringMachine(state, level, transform.apply(pos), false);
+                GenericPipeInterfaceEntity.addNode(level, transform.apply(pos), isInterface, state, pipeBlock.getNetworkData(level));
+                level.setBlockAndUpdate(transform.apply(pos), state);
+                pipeBlock.getNetworkData(level).setDirty();
+                return;
+            }
+//            if (state.getBlock() instanceof MachineCoreBlock machineCoreBlock) {
+//
+//                var entity = (MachineCoreEntity) level.getBlockEntity(transform.apply(pos));
+//                if (entity == null) return;
+//                entity.setControllerPos(transform.apply(entity.getControllerPos()));
+//                var controller = entity.getCachedController();
+//                if (controller == null) return;
+//                controller.onCoreBroken(transform.apply(pos));
+//                return;
+//            }
+            var entity = level.getBlockEntity(transform.apply(pos));
+            if (entity instanceof MultiblockMachineController controller) {
+                controller.getConnectedCores().forEach(corePos -> {
+                    level.getServer().execute(() -> {
+                        var coreState = level.getBlockState(transform.apply(corePos));
+                        coreState = coreState.setValue(MachineCoreBlock.USED, false);
+                        level.setBlock(transform.apply(corePos), coreState, Block.UPDATE_ALL);
+                        controller.onCoreBroken(transform.apply(corePos));
+
+                    });
+                });
+                controller.getConnectedCores().clear();
+                level.setBlock(transform.apply(pos), state.setValue(MultiblockMachine.ASSEMBLED, false), Block.UPDATE_ALL);
+                level.getServer().execute(() -> {
+                    controller.initMultiblock(level.getBlockState(transform.apply(pos)));
+                });
+
+            }
+
 
         });
     }
