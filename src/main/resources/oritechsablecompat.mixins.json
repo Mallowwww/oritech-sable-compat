@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "oritechsablecompat.mixins.refmap.json",
   "mixins": [
-    "EndericLaserBlockEntityMixin"
+    "EndericLaserBlockEntityMixin",
+    "SubLevelAssemblyHelperMixin"
   ],
   "client": [
   ],
