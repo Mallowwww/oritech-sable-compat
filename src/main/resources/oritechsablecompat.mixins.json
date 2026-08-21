@@ -9,6 +9,7 @@
     "SubLevelAssemblyHelperMixin"
   ],
   "client": [
+    "BlockOutlineRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
