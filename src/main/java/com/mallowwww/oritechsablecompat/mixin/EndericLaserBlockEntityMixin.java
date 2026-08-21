@@ -72,7 +72,16 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
     public void basicRaycast(Vec3 from, Vec3 direction, int range, float searchOffset, CallbackInfoReturnable<BlockPos> ci) {
         ci.cancel();
 
-        var result = level.clip(new ClipContext(from.subtract(direction), from.add(direction.scale(300)), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty()));
+//        System.out.println("Raycast from " + from + " to " + direction + " with range " + range);
+        if (direction.length() > 32_000_000) {
+            ci.setReturnValue(null);
+            return;
+        }
+        if (direction.length() < .2) {
+            ci.setReturnValue(null);
+            return;
+        }
+        var result = level.clip(new ClipContext(from.subtract(direction.normalize()), from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty()));
         ci.setReturnValue(result.getBlockPos());
     }
 
@@ -98,10 +107,10 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
                 return;
             }
         }
-        var targetDirVec3 = targetDirection.getCenter();
-        var laserHeadPosVec3 = getLaserHeadPosition().getCenter();
+        var targetDirVec3 = Sable.HELPER.projectOutOfSubLevel(level, targetDirection.getCenter());
+        var laserHeadPosVec3 = Sable.HELPER.projectOutOfSubLevel(level, getLaserHeadPosition().getCenter());
         var direction = targetDirVec3.subtract(laserHeadPosVec3);
-        var from = laserHead.add(direction.scale(1.5));
+        var from = laserHead.add(direction.normalize().scale(1.5));
 
         var nextBlock = basicRaycast(from, direction, range, 0.45F);
         if (nextBlock == null) {
@@ -129,7 +138,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
     @Inject(at = @At("HEAD"), method = "trySetNewTarget", cancellable = true)
     public void trySetNewTarget(BlockPos targetPos, boolean alsoSetDirection, CallbackInfoReturnable<Boolean> ci) {
         ci.cancel();
-        System.out.println("Got to mixin");
+//        System.out.println("Got to mixin");
         // if target is coreblock, adjust it to point to controller if connected
         var targetState = Objects.requireNonNull(level).getBlockState(targetPos);
         if (targetState.getBlock() instanceof MachineCoreBlock && targetState.getValue(MachineCoreBlock.USED)) {
@@ -139,17 +148,17 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
         }
         var targetPosVec3 = Sable.HELPER.projectOutOfSubLevel(level, targetPos.getCenter());
         var worldPositionVec3 = Sable.HELPER.projectOutOfSubLevel(level, worldPosition.getCenter());
-        System.out.println("target: " + targetPosVec3 + " " + targetPos);
-        System.out.println("world pos: " + worldPositionVec3 + " " + worldPosition);
+//        System.out.println("target: " + targetPosVec3 + " " + targetPos);
+//        System.out.println("world pos: " + worldPositionVec3 + " " + worldPosition);
 //        var distance = targetPos.distManhattan(worldPosition);
         var distance = manhattanDist(targetPosVec3, worldPositionVec3);
         var blockHardness = targetState.getBlock().defaultDestroyTime();
         if (distance > range || blockHardness < 0.0 || targetState.getBlock().equals(Blocks.AIR)) {
-            System.out.println("Out of range");
+//            System.out.println("Out of range");
             ci.setReturnValue(false);
             return;
         }
-        System.out.println("Made it past range check");
+//        System.out.println("Made it past range check");
 
         this.targetBlockEnergyNeeded = (int) (OritechConfig.laserArmConfig.blockBreakEnergyBase.get() * Math.pow(blockHardness, OritechConfig.blockBreakHardnessExponentialFactor.get()) * addonData.efficiency());
 
@@ -162,7 +171,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             this.targetDirection = targetPos;
             pendingArea = null;
             setChanged();
-            System.out.println("Set direction");
+//            System.out.println("Set direction");
         }
         this.setChanged();
 
