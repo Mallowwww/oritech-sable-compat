@@ -9,6 +9,7 @@
     "SubLevelAssemblyHelperMixin"
   ],
   "client": [
+    "LaserArmRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
