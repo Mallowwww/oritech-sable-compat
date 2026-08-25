@@ -99,7 +99,6 @@ public abstract class SubLevelAssemblyHelperMixin {
         // My code starts here
         blocks.forEach(pos -> {
             var state = level.getBlockState(transform.apply(pos));
-            System.out.println(state);
             if (state.getBlock() instanceof AbstractPipeBlock pipeBlock) {
                 var isInterface = pipeBlock.hasNeighboringMachine(state, level, transform.apply(pos), false);
                 GenericPipeInterfaceEntity.addNode(level, transform.apply(pos), isInterface, state, pipeBlock.getNetworkData(level));

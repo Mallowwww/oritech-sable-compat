@@ -1,6 +1,7 @@
 package com.mallowwww.oritechsablecompat.mixin;
 
 import dev.ryanhcode.sable.Sable;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
@@ -21,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.MachineCoreEntity;
 import rearth.oritech.block.entity.interaction.LaserArmBlockEntity;
+import rearth.oritech.client.renderers.LaserArmRenderer;
 import rearth.oritech.init.OritechConfig;
 import rearth.oritech.init.TagContent;
 import rearth.oritech.util.MachineAddonController;
@@ -110,7 +112,8 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
         var targetDirVec3 = Sable.HELPER.projectOutOfSubLevel(level, targetDirection.getCenter());
         var laserHeadPosVec3 = Sable.HELPER.projectOutOfSubLevel(level, getLaserHeadPosition().getCenter());
         var direction = targetDirVec3.subtract(laserHeadPosVec3);
-        var from = laserHead.add(direction.normalize().scale(1.5));
+        var from = laserHead.add(direction.normalize().scale(1.95));
+
 
         var nextBlock = basicRaycast(from, direction, range, 0.45F);
         if (nextBlock == null) {
@@ -133,6 +136,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
     @Unique
     private static float manhattanDist(Vec3 a, Vec3 b) {
         return (float) Math.abs((b.x - a.x) + (b.y - a.y) + (b.z - a.z));
+
     }
 
     @Inject(at = @At("HEAD"), method = "trySetNewTarget", cancellable = true)

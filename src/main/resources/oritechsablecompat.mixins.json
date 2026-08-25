@@ -9,7 +9,8 @@
     "SubLevelAssemblyHelperMixin"
   ],
   "client": [
-    "BlockOutlineRendererMixin"
+    "BlockOutlineRendererMixin",
+    "LaserArmRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
