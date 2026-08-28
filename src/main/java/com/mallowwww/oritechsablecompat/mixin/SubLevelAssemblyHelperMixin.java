@@ -97,13 +97,16 @@ public abstract class SubLevelAssemblyHelperMixin {
         ci.setReturnValue(subLevel);
 
         // My code starts here
-        blocks.forEach(pos -> {
+        for (var pos : blocks) {
+
             var state = level.getBlockState(transform.apply(pos));
             if (state.getBlock() instanceof AbstractPipeBlock pipeBlock) {
-                var isInterface = pipeBlock.hasNeighboringMachine(state, level, transform.apply(pos), false);
-                GenericPipeInterfaceEntity.addNode(level, transform.apply(pos), isInterface, state, pipeBlock.getNetworkData(level));
-                level.setBlockAndUpdate(transform.apply(pos), state);
-                pipeBlock.getNetworkData(level).setDirty();
+                level.getServer().execute(() -> {
+                    var isInterface = pipeBlock.hasNeighboringMachine(state, level, transform.apply(pos), false);
+                    GenericPipeInterfaceEntity.addNode(level, transform.apply(pos), isInterface, state, pipeBlock.getNetworkData(level));
+                    level.setBlockAndUpdate(transform.apply(pos), state);
+                    pipeBlock.getNetworkData(level).setDirty();
+                });
                 return;
             }
 //            if (state.getBlock() instanceof MachineCoreBlock machineCoreBlock) {
@@ -118,7 +121,7 @@ public abstract class SubLevelAssemblyHelperMixin {
 //            }
             var entity = level.getBlockEntity(transform.apply(pos));
             if (entity instanceof MultiblockMachineController controller) {
-                controller.getConnectedCores().forEach(corePos -> {
+                for (var corePos : controller.getConnectedCores()) {
                     level.getServer().execute(() -> {
                         var coreState = level.getBlockState(transform.apply(corePos));
                         coreState = coreState.setValue(MachineCoreBlock.USED, false);
@@ -126,7 +129,7 @@ public abstract class SubLevelAssemblyHelperMixin {
                         controller.onCoreBroken(transform.apply(corePos));
 
                     });
-                });
+                }
                 controller.getConnectedCores().clear();
                 level.setBlock(transform.apply(pos), state.setValue(MultiblockMachine.ASSEMBLED, false), Block.UPDATE_ALL);
                 level.getServer().execute(() -> {
@@ -136,6 +139,6 @@ public abstract class SubLevelAssemblyHelperMixin {
             }
 
 
-        });
+        }
     }
 }

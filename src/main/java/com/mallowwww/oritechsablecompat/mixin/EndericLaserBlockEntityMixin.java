@@ -1,6 +1,8 @@
 package com.mallowwww.oritechsablecompat.mixin;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
+import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
@@ -55,6 +57,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
     @Shadow
     public int hunterAddons = 0;
 
+
     private EndericLaserBlockEntityMixin(BlockEntityType<?> type, BlockPos pos, BlockState blockState) {
         super(type, pos, blockState);
     }
@@ -74,7 +77,8 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
     @Inject(at = @At("HEAD"), method = "basicRaycast", cancellable = true)
     public void basicRaycast(Vec3 from, Vec3 direction, int range, float searchOffset, CallbackInfoReturnable<BlockPos> ci) {
         ci.cancel();
-
+        from = Sable.HELPER.projectOutOfSubLevel(level, from);
+//        direction = Sable.HELPER.projectOutOfSubLevel(level, direction);
 //        System.out.println("Raycast from " + from + " to " + direction + " with range " + range);
         if (direction.length() > 32_000_000) {
             ci.setReturnValue(null);
@@ -84,7 +88,13 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             ci.setReturnValue(null);
             return;
         }
-        var result = level.clip(new ClipContext(from.subtract(direction.normalize()), from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty()));
+        var context = new ClipContext(from.subtract(direction.normalize()), from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty());
+//        System.out.println("from: "+from);
+//        System.out.println("direction: "+direction);
+        if (context instanceof ClipContextExtension extension) {
+            extension.sable$setDoNotProject(true);
+        }
+        var result = level.clip(context);
         ci.setReturnValue(result.getBlockPos());
     }
 
@@ -96,7 +106,14 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, currentLivingTarget.getEyePosition().subtract(0.5f, 0, 0.5f)));
         } else {
 //            return getCurrentTarget().getCenter();
-            ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, currentTarget.getCenter()));
+            var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(this);
+            if (sublevel != null) {
+                var center = currentTarget.getCenter();
+                ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, center));
+                // For development
+//                ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, laserHead).add(0, 3, 0));
+            } else
+                ci.setReturnValue(currentTarget.getCenter());
         }
     }
 

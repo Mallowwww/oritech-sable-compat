@@ -3,6 +3,7 @@ package com.mallowwww.oritechsablecompat.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -15,6 +16,10 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4d;
+import org.joml.Matrix4f;
+import org.joml.Quaterniond;
+import org.joml.Quaternionf;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -61,6 +66,9 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
         var startOffset = new Vec3(0, 1.65f, 0);
 
         var targetPos = laserEntity.getVisualTarget();
+//        System.out.println("pos1: "+startPos);
+//        System.out.println("pos2: "+targetPos);
+
         var targetBlock = laserEntity.getLevel().getBlockState(laserEntity.getCurrentTarget()).getBlock();
         if (laserEntity.isTargetingAtomicForge(targetBlock)) { // adjust so the beam end faces one of the corner pillars
             var moveX = 0.5;
@@ -74,11 +82,13 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
         }
 
         if (laserEntity.lastRenderPosition == null) laserEntity.lastRenderPosition = targetPos;
-        targetPos = Sable.HELPER.projectOutOfSubLevel(laserEntity.getLevel(), lerp(laserEntity.lastRenderPosition, targetPos, 0.06f));
+//        targetPos = Sable.HELPER.projectOutOfSubLevel(laserEntity.getLevel(), lerp(laserEntity.lastRenderPosition, targetPos, 0.06f));
+        targetPos = lerp(laserEntity.lastRenderPosition, targetPos, 0.06f);
         laserEntity.lastRenderPosition = targetPos;
 
         var targetPosOffset = worldToOffsetPosition(facing, targetPos, startPos).add(startOffset);
-
+//        System.out.println("targetPos: "+targetPos);
+//        System.out.println("targetPosOffset"+targetPosOffset);
         var forward = targetPos.subtract(startPos).normalize();
         if (!laserEntity.isTargetingEnergyContainer() && !laserEntity.isTargetingBuddingAmethyst() && laserEntity.getLevel().random.nextFloat() > 0.7) {
             var world = laserEntity.getLevel();
@@ -93,6 +103,20 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
         float thickness = (float) (0.03f + Math.sin((laserEntity.getLevel().getGameTime() + partialTick) * 0.3) * 0.015f);
 
         var deltaVec = targetPosOffset.subtract(startOffset);
+//        if (!Sable.HELPER.isInPlotGrid(laserEntity)) {
+//            var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(laserEntity);
+//            if (sublevel == null) return;
+//            deltaVec = new Vec3(sublevel.renderPose().orientation().transformInverse(deltaVec.toVector3f()));
+//        }
+        var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(laserEntity);
+        if (sublevel != null) {
+            var pose = sublevel.renderPose();
+            var rotation = pose.orientation();
+//            matrices.mulPose(new Quaternionf().rotateLocalX((float) -Math.PI / 2f));
+            deltaVec = new Vec3(rotation.transformInverse(deltaVec.toVector3f()));
+
+//            matrices.mulPose(startPos.r);
+        }
 
         // glowing core
         BeamRenderer.renderStraightBeam(

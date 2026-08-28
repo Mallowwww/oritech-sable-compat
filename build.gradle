@@ -177,7 +177,7 @@ dependencies {
 
 
     implementation "rearth.oritech:oritech-neoforge-1.21.1:1.2.6"
-    implementation "maven.modrinth:sable:1.2.2+mc1.21.1"
+    implementation "maven.modrinth:sable:2.0.0+mc1.21.1"
 
     jarJar(api("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:[${project.sable_companion_version},)")) {
         version {
