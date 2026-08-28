@@ -23,6 +23,7 @@ import rearth.oritech.block.blocks.processing.MachineCoreBlock;
 import rearth.oritech.block.entity.MachineCoreEntity;
 import rearth.oritech.block.entity.interaction.LaserArmBlockEntity;
 import rearth.oritech.client.renderers.LaserArmRenderer;
+import rearth.oritech.init.BlockContent;
 import rearth.oritech.init.OritechConfig;
 import rearth.oritech.init.TagContent;
 import rearth.oritech.util.MachineAddonController;
@@ -109,6 +110,10 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
                 return;
             }
         }
+        if (targetDirection == null) {
+            currentTarget = BlockPos.ZERO;
+            return;
+        }
         var targetDirVec3 = Sable.HELPER.projectOutOfSubLevel(level, targetDirection.getCenter());
         var laserHeadPosVec3 = Sable.HELPER.projectOutOfSubLevel(level, getLaserHeadPosition().getCenter());
         var direction = targetDirVec3.subtract(laserHeadPosVec3);
@@ -157,7 +162,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
 //        var distance = targetPos.distManhattan(worldPosition);
         var distance = manhattanDist(targetPosVec3, worldPositionVec3);
         var blockHardness = targetState.getBlock().defaultDestroyTime();
-        if (distance > range || blockHardness < 0.0 || targetState.getBlock().equals(Blocks.AIR)) {
+        if (distance > range || blockHardness < 0.0 || targetState.getBlock().equals(Blocks.AIR) || targetState.getBlock().equals(BlockContent.LASER_ARM_BLOCK) || distance < 1) {
 //            System.out.println("Out of range");
             ci.setReturnValue(false);
             return;
