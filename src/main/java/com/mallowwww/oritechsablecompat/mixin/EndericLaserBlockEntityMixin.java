@@ -88,7 +88,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             ci.setReturnValue(null);
             return;
         }
-        var context = new ClipContext(from.subtract(direction.normalize()), from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty());
+        var context = new ClipContext(from, from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty());
 //        System.out.println("from: "+from);
 //        System.out.println("direction: "+direction);
         if (context instanceof ClipContextExtension extension) {
@@ -135,7 +135,7 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
         var targetDirVec3 = Sable.HELPER.projectOutOfSubLevel(level, targetDirection.getCenter());
         var laserHeadPosVec3 = Sable.HELPER.projectOutOfSubLevel(level, getLaserHeadPosition().getCenter());
         var direction = targetDirVec3.subtract(laserHeadPosVec3);
-        var from = laserHead.add(direction.normalize().scale(1.95));
+        var from = laserHead.add(direction.normalize().scale(1.25));
 
 
         var nextBlock = basicRaycast(from, direction, range, 0.45F);
