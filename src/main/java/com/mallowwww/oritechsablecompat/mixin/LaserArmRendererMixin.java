@@ -3,6 +3,7 @@ package com.mallowwww.oritechsablecompat.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
@@ -50,7 +51,7 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
         super(model);
     }
 
-    @Inject(at = @At("HEAD"), method = "postRender(Lcom/mojang/blaze3d/vertex/PoseStack;Lrearth/oritech/block/entity/interaction/LaserArmBlockEntity;Lsoftware/bernie/geckolib/cache/object/BakedGeoModel;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/mojang/blaze3d/vertex/VertexConsumer;ZFIII)V", cancellable = true)
+//    @Inject(at = @At("HEAD"), method = "postRender(Lcom/mojang/blaze3d/vertex/PoseStack;Lrearth/oritech/block/entity/interaction/LaserArmBlockEntity;Lsoftware/bernie/geckolib/cache/object/BakedGeoModel;Lnet/minecraft/client/renderer/MultiBufferSource;Lcom/mojang/blaze3d/vertex/VertexConsumer;ZFIII)V", cancellable = true)
     private <T extends LaserArmBlockEntity & GeoAnimatable> void postRender(PoseStack matrices, T laserEntity, BakedGeoModel model, MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour, CallbackInfo ci) {
         ci.cancel();
         var startPos = Sable.HELPER.projectOutOfSubLevel(laserEntity.getLevel(), laserEntity.laserHead);
@@ -68,6 +69,7 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
         var targetPos = laserEntity.getVisualTarget();
 //        System.out.println("pos1: "+startPos);
 //        System.out.println("pos2: "+targetPos);
+        var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(laserEntity);
 
         var targetBlock = laserEntity.getLevel().getBlockState(laserEntity.getCurrentTarget()).getBlock();
         if (laserEntity.isTargetingAtomicForge(targetBlock)) { // adjust so the beam end faces one of the corner pillars
@@ -108,12 +110,14 @@ public abstract class LaserArmRendererMixin<T extends LaserArmBlockEntity & GeoA
 //            if (sublevel == null) return;
 //            deltaVec = new Vec3(sublevel.renderPose().orientation().transformInverse(deltaVec.toVector3f()));
 //        }
-        var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(laserEntity);
         if (sublevel != null) {
             var pose = sublevel.renderPose();
             var rotation = pose.orientation();
+//            matrices.translate(-startPos.x, -startPos.y, -startPos.z);
+//            matrices.mulPose(new Matrix4f().identity().rotate(new Quaternionf(rotation).invert()));
+//            matrices.translate(startPos.x, startPos.y, startPos.z);
 //            matrices.mulPose(new Quaternionf().rotateLocalX((float) -Math.PI / 2f));
-            deltaVec = new Vec3(rotation.transformInverse(deltaVec.toVector3f()));
+//            deltaVec = new Vec3(rotation.transformInverse(deltaVec.toVector3f()));
 
 //            matrices.mulPose(startPos.r);
         }

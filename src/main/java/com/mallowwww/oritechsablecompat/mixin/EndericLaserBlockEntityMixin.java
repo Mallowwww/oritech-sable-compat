@@ -109,7 +109,8 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(this);
             if (sublevel != null) {
                 var center = currentTarget.getCenter();
-                ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, center));
+                center = Sable.HELPER.projectOutOfSubLevel(level, center);
+                ci.setReturnValue(sublevel.renderPose().transformPositionInverse(center));
                 // For development
 //                ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, laserHead).add(0, 3, 0));
             } else
