@@ -1,11 +1,13 @@
 package com.mallowwww.oritechsablecompat.mixin;
 
 import dev.ryanhcode.sable.Sable;
+import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -95,7 +97,18 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
             extension.sable$setDoNotProject(true);
         }
         var result = level.clip(context);
-        ci.setReturnValue(result.getBlockPos());
+        BlockPos result2 = BlockGetter.traverseBlocks(
+                from, from.add((direction.normalize().scale(range))),
+                context, (ctx, pos) -> {
+                    var state = level.getBlockState(pos);
+                    var passthrough = state.isAir() || !state.getFluidState().isEmpty() || state.is(TagContent.LASER_PASSTHROUGH) || (hunterAddons > 0 && !state.isRedstoneConductor(level, pos));
+                    if (passthrough) return null;
+                    return pos;
+                }, (ctx) -> null
+        );
+
+
+        ci.setReturnValue(result2);
     }
 
     @Inject(at = @At("HEAD"), method = "getVisualTarget", cancellable = true)
@@ -140,7 +153,8 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
 
         var nextBlock = basicRaycast(from, direction, range, 0.45F);
         if (nextBlock == null) {
-            currentTarget = BlockPos.ZERO;
+            var center = Sable.HELPER.projectOutOfSubLevel(level, targetDirection.getCenter());
+            targetDirection = BlockPos.containing(center);
             return;
         }
 
