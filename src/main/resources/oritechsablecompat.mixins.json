@@ -10,7 +10,8 @@
   ],
   "client": [
     "BlockOutlineRendererMixin",
-    "LaserArmRendererMixin"
+    "LaserArmRendererMixin",
+    "AutoPlayingSoundKeyFrameHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
