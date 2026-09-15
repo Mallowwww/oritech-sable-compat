@@ -150,7 +150,17 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
         ci.cancel();
         if (hunterAddons > 0 && currentLivingTarget != null) {
 //            return currentLivingTarget.getEyePosition().subtract(0.5f, 0, 0.5f);
-            ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, currentLivingTarget.getEyePosition().subtract(0.5f, 0, 0.5f)));
+            var globalEntityPos = currentLivingTarget.getEyePosition().subtract(0.5f, 0, 0.5f);
+//            ci.setReturnValue(Sable.HELPER.projectOutOfSubLevel(level, ));
+//            if (Sable.HELPER.isInPlotGrid(level, this))
+            var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(this);
+            if (sublevel == null)
+                ci.setReturnValue(globalEntityPos);
+            else {
+                ci.setReturnValue(
+                        sublevel.lastPose().transformPositionInverse(globalEntityPos)
+                );
+            }
         } else {
 //            return getCurrentTarget().getCenter();
             var sublevel = (ClientSubLevel) Sable.HELPER.getContaining(this);
