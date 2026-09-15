@@ -6,14 +6,19 @@ import dev.ryanhcode.sable.mixinterface.clip_overwrite.ClipContextExtension;
 import dev.ryanhcode.sable.sublevel.ClientSubLevel;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +39,9 @@ import rearth.oritech.util.MachineAddonController;
 
 import java.util.ArrayDeque;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Mixin(value = LaserArmBlockEntity.class, remap = false)
 public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
@@ -96,21 +104,47 @@ public abstract class EndericLaserBlockEntityMixin extends BlockEntity {
         if (context instanceof ClipContextExtension extension) {
             extension.sable$setDoNotProject(true);
         }
+        BiFunction<BlockState, BlockPos, Boolean> tester = (BlockState state, BlockPos pos) -> state.isAir() || !state.getFluidState().isEmpty() || state.is(TagContent.LASER_PASSTHROUGH) || (hunterAddons > 0 && !state.isRedstoneConductor(level, pos));
         var result = level.clip(context);
-        BlockPos result2 = BlockGetter.traverseBlocks(
-                from, from.add((direction.normalize().scale(range))),
-                context, (ctx, pos) -> {
-                    var state = level.getBlockState(pos);
-                    var passthrough = state.isAir() || !state.getFluidState().isEmpty() || state.is(TagContent.LASER_PASSTHROUGH) || (hunterAddons > 0 && !state.isRedstoneConductor(level, pos));
-                    if (passthrough) return null;
-                    return pos;
-                }, (ctx) -> null
+        // This one doesn't properly take SubLevels into account
+//        BlockPos result2 = BlockGetter.traverseBlocks(
+//                from, from.add((direction.normalize().scale(range))),
+//                context, (ctx, pos) -> {
+//                    var state = level.getBlockState(pos);
+//                    var passthrough = tester.apply(state, pos);
+//                    if (passthrough) return null;
+//                    return pos;
+//                }, (ctx) -> null
+//        );
+        var result3 = clipIgnoringSubLevelAware(
+                level, from, from.add((direction.normalize().scale(range))), ClipContext.Block.COLLIDER, null, tester
         );
-
-
-        ci.setReturnValue(result2);
+        // The first one is more accurate, so if we can get away with it, use it
+        if (tester.apply(level.getBlockState(result.getBlockPos()), result.getBlockPos()))
+            ci.setReturnValue(result3.getBlockPos());
+        else
+            ci.setReturnValue(result.getBlockPos());
     }
+    @Unique
+    private static BlockHitResult clipIgnoringSubLevelAware(Level level, Vec3 start, Vec3 end, ClipContext.Block blockMode, Entity entity, BiFunction<BlockState, BlockPos, Boolean> tester) {
+        Vec3 from = start;
+        BlockHitResult result;
+        int guard = 0;
+        do {
+            ClipContext ctx = new ClipContext(from, end, blockMode, ClipContext.Fluid.NONE, entity);
+            result = level.clip(ctx);
 
+            if (result.getType() != HitResult.Type.BLOCK) break;
+
+            BlockState hitState = level.getBlockState(result.getBlockPos());
+            if (!tester.apply(hitState, result.getBlockPos())) break;
+
+            Vec3 dir = end.subtract(start).normalize();
+            from = result.getLocation().add(dir.scale(1.0E-3));
+        } while (++guard < 64 && from.distanceToSqr(end) > 1.0E-6);
+
+        return result;
+    }
     @Inject(at = @At("HEAD"), method = "getVisualTarget", cancellable = true)
     public void getVisualTarget(CallbackInfoReturnable<Vec3> ci) {
         ci.cancel();
