@@ -11,6 +11,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -24,6 +25,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import org.joml.Matrix4d;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -89,27 +92,22 @@ public class BlockOutlineRendererMixin {
 
         matrixStack.pushPose();
         var cameraPos = camera.getPosition();
-        matrixStack.translate(-cameraPos.x(), -cameraPos.y(), -cameraPos.z());
-        matrixStack.translate(0.005f, 0.005f, 0.005f); // slight offset to avoid z fighting
-        var sublevel = (ClientSubLevel) SableCompanion.INSTANCE.getContaining(world, blockPos);
-        if (sublevel != null) {
-            var subLevelMat = sublevel.renderPose().bakeIntoMatrix(new Matrix4d());
-//            System.out.println(subLevelMat);
-//            matrixStack.mulPose(new Matrix4f(subLevelMat));
 
-        }
-
-        var shape = Shapes.block();
+        matrixStack.translate(machinePos.getX() - cameraPos.x,
+                machinePos.getY() - cameraPos.y,
+                machinePos.getZ() - cameraPos.z);
+        matrixStack.translate(0.005, 0.005, 0.005);
+        var shape = Shapes.empty();
         for (var coreOffset : fullList) {
             var fixedOffset = new Vec3i(coreOffset.getX(), coreOffset.getY(), coreOffset.getZ());
-            var worldOffsetTemp = Geometry.offsetToWorldPosition(machineFacing, fixedOffset, machinePos);
-            var worldOffset = Sable.HELPER.projectOutOfSubLevel(world, new Vec3(worldOffsetTemp.getX(), worldOffsetTemp.getY(), worldOffsetTemp.getZ()));
-
-
-            shape = Shapes.or(shape, Shapes.box(worldOffset.x, worldOffset.y, worldOffset.z, worldOffset.x + 1, worldOffset.y + 1, worldOffset.z + 1));
-
+            var local = Geometry.offsetToWorldPosition(machineFacing, fixedOffset, machinePos).subtract(machinePos);
+            if (player.tickCount % 20 == 0)
+                System.out.println("Local: "+local);
+            shape = Shapes.or(shape, Shapes.box(
+                    local.getX(), local.getY(), local.getZ(),
+                    local.getX() + 1, local.getY() + 1, local.getZ() + 1));
         }
-
+        var pos = entity.getBlockPos();
         LevelRenderer.renderShape(matrixStack, consumer.getBuffer(RenderType.lines()), shape, 0, 0, 0, 1f, 1f, 1f, 0.7F);
         matrixStack.popPose();
     }
