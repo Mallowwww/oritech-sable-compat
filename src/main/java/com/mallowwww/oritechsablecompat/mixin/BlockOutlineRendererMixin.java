@@ -101,13 +101,10 @@ public class BlockOutlineRendererMixin {
         for (var coreOffset : fullList) {
             var fixedOffset = new Vec3i(coreOffset.getX(), coreOffset.getY(), coreOffset.getZ());
             var local = Geometry.offsetToWorldPosition(machineFacing, fixedOffset, machinePos).subtract(machinePos);
-            if (player.tickCount % 20 == 0)
-                System.out.println("Local: "+local);
             shape = Shapes.or(shape, Shapes.box(
                     local.getX(), local.getY(), local.getZ(),
                     local.getX() + 1, local.getY() + 1, local.getZ() + 1));
         }
-        var pos = entity.getBlockPos();
         LevelRenderer.renderShape(matrixStack, consumer.getBuffer(RenderType.lines()), shape, 0, 0, 0, 1f, 1f, 1f, 0.7F);
         matrixStack.popPose();
     }
