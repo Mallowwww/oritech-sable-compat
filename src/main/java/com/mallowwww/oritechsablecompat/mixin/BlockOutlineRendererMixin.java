@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import rearth.oritech.block.base.block.MultiblockMachine;
 import rearth.oritech.block.blocks.augmenter.AugmentResearchStationBlock;
+import rearth.oritech.block.blocks.pipes.fluid.FluidPipeBlock;
 import rearth.oritech.block.blocks.processing.RefineryModuleBlock;
 import rearth.oritech.block.blocks.storage.LargeStorageBlock;
 import rearth.oritech.client.renderers.BlockOutlineRenderer;

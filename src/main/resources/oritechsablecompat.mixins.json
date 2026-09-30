@@ -6,12 +6,13 @@
   "refmap": "oritechsablecompat.mixins.refmap.json",
   "mixins": [
     "EndericLaserBlockEntityMixin",
+    "GenericPipeBlockMixin",
     "SubLevelAssemblyHelperMixin"
   ],
   "client": [
+    "AutoPlayingSoundKeyFrameHandlerMixin",
     "BlockOutlineRendererMixin",
-    "LaserArmRendererMixin",
-    "AutoPlayingSoundKeyFrameHandlerMixin"
+    "LaserArmRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
