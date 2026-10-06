@@ -44,7 +44,7 @@ public class OritechSableCompatMod {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
+        
 
     }
 

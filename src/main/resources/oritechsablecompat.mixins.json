@@ -5,8 +5,11 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "oritechsablecompat.mixins.refmap.json",
   "mixins": [
+    "DirectionExplosionWaveMixin",
     "EndericLaserBlockEntityMixin",
     "GenericPipeBlockMixin",
+    "NuclearExplosionEntityMixin",
+    "NukeBlockMixin",
     "SubLevelAssemblyHelperMixin"
   ],
   "client": [
